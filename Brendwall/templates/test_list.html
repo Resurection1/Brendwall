@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление продукта</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .left {
+            flex: 2;
+        }
+        .right {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .form-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+        .form-container h1 {
+            margin-top: 0;
+        }
+        .form-container label {
+            display: block;
+            margin-top: 10px;
+        }
+        .form-container input, 
+        .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container button {
+            margin-top: 15px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left">
+        <h2>Список тестов</h2>
+        <table id="productsTable">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Цена</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="right">
+        <div class="form-container">
+            <h1>Добавить новый продукт</h1>
+
+            <form id="productForm">
+                <label for="title">Название:</label>
+                <input type="text" id="title" name="title" required>
+
+                <label for="description">Описание:</label>
+                <textarea id="description" name="description" required></textarea>
+
+                <label for="price">Цена:</label>
+                <input type="number" id="price" name="price" required>
+
+                <button type="submit">Отправить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        function loadProducts() {
+            fetch('http://localhost:8000/api/test_get/')
+                .then(response => response.json())
+                .then(data => {
+                    const productsTable = document.querySelector('#productsTable tbody');
+                    productsTable.innerHTML = '';
+
+                    data.forEach(product => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.title}</td>
+                            <td>${product.description}</td>
+                            <td>${product.price}</td>
+                        `;
+                        productsTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching products:', error));
+        }
+
+        loadProducts();
+
+        const productForm = document.getElementById('productForm');
+        productForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                price: document.getElementById('price').value
+            };
+
+            fetch('http://localhost:8000/api/test_post/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error adding product');
+                }
+                return response.json();
+            })
+            .then(data => {
+                productForm.reset();
+
+                loadProducts();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+</script>
+
+</body>
+</html>
